@@ -1,0 +1,501 @@
+---
+title: "cosponsor_figures"
+output:
+  pdf_document: default
+  html_document: default
+date: "2025-06-05"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r}
+# Load packages
+library(readxl)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(patchwork)
+library(cowplot)
+library(wesanderson)
+```
+
+```{r}
+# Load data
+cosponsor_data <- read_excel("cosponsor_data.xlsx",
+                             sheet = "Cosponsor Data")
+```
+
+## creating proportions
+```{r}
+cosponsor_data <- cosponsor_data %>%
+  mutate(
+    prop_spon_men = spon_men / spon_total,
+    prop_spon_trans = spon_trans / spon_total,
+    prop_spon_gop = spon_rep / spon_total,
+    prop_spon_thi = spon_thi / spon_total,
+    prop_spon_white = 1 - spon_minority
+  ) %>% 
+  drop_na()
+```
+
+## Creating diverging bar plot for overall policy
+```{r}
+pos_gender_groups <- list(pos_women = c("abor_man", 
+                                     "contra_ex_supply", 
+                                     "contra_no_share", 
+                                     "contra_otc_script", 
+                                     "contra_otc_wo_script", 
+                                     "contra_script", 
+                                     "fer_treat"),
+                          pos_men = c("er_dys_man", 
+                                      "pros_scr", 
+                                      "vase"),
+                          pos_trans = c("gen_affirm_man", 
+                                        "horm_ther"))
+```
+
+```{r}
+# assigning policy group to each row
+cosponsor_data <- cosponsor_data %>%
+  mutate(
+    group = case_when(
+      type %in% pos_gender_groups$pos_women ~ "Women-Friendly Policies",
+      type %in% pos_gender_groups$pos_men ~ "Men-Friendly Policies",
+      type %in% pos_gender_groups$pos_trans ~ "Trans-Friendly Policies",
+      TRUE ~ NA_character_
+    )) %>%
+  filter(!is.na(group))
+```
+
+
+```{r}
+make_diverging_plot <- function(df, pos_col, neg_col, title, subtitle = NULL, group_col = "group",
+                                pos_label = "Group A", neg_label = "Group B",
+                                fill_colors = c("Group A" = "#2ca02c", "Group B" = "#d62728")) {
+  df %>%
+    group_by(.data[[group_col]]) %>%
+    summarise(
+      Positive = mean(.data[[pos_col]], na.rm = TRUE),
+      Negative = mean(.data[[neg_col]], na.rm = TRUE)
+    ) %>%
+    mutate(Negative = -Negative) %>%
+    pivot_longer(cols = c("Positive", "Negative"), names_to = "Direction", values_to = "Prop") %>%
+    mutate(Direction = recode(Direction, 
+                              "Positive" = pos_label, 
+                              "Negative" = neg_label)) %>%
+    ggplot(aes(x = factor(.data[[group_col]], levels = c("Trans-Friendly Policies","Men-Friendly Policies", "Women-Friendly Policies")), y = Prop, fill = Direction)) +
+    geom_bar(stat = "identity") +
+    geom_text(aes(label = paste0(abs(round(Prop * 100, 1)), "%")), 
+              position = position_stack(vjust = 0.5),
+              color = "black", size = 3.5, fontface = "bold") +
+    coord_flip() +
+    scale_fill_manual(values = fill_colors) +
+    labs(
+      title = title,
+      subtitle = subtitle,
+      x = NULL,
+      y = NULL,
+      fill = NULL
+    ) +
+    theme_cowplot() +
+    theme(
+      axis.line = element_blank(),
+      axis.ticks = element_blank(),
+      axis.text.x = element_blank(),
+      axis.title.x = element_blank(),
+      legend.position = "right", 
+      plot.title.position = "plot",
+      plot.subtitle = element_text(hjust = 0.5, face = "bold"),  
+      axis.text.y = element_text(face = "bold", color = "gray30"), 
+      legend.text = element_text(face = "bold"),
+      plot.title = element_text(size = 12))
+ }
+```
+
+```{r}
+# Gender panel
+p_gender <- make_diverging_plot(
+  cosponsor_data, "prop_spon_women", "prop_spon_men",
+  title = "Fig 8.1",
+  subtitle = "Gender",
+  pos_label = "Women",
+  neg_label = "Men",
+  fill_colors = c("Women" = "#fa236e", "Men" = "#38499f")
+)
+
+# Party panel
+p_party <- make_diverging_plot(
+  cosponsor_data, "prop_spon_dem", "prop_spon_gop",
+  subtitle = "Party",
+  title = "Fig 8.2",
+  pos_label = "Democrat", neg_label = "Republican",
+  fill_colors = c("Democrat" = "#00A08A", "Republican" = "#FF0000")
+)
+
+# Race panel
+p_race <- make_diverging_plot(
+  cosponsor_data, "spon_minority", "prop_spon_white",
+  subtitle = "Race",
+  title = "Fig. 8.3",
+  pos_label = "Racial Minority", neg_label = "White",
+  fill_colors = c("Racial Minority" = "#9A8822", "White" = "#E58601")
+)
+```
+
+```{r}
+combined_plot <- (p_gender / p_party / p_race) +
+  plot_annotation(title = "Percentage of Positive Policies Passed by Gender, Party, and Race",
+                  theme = theme(plot.title = element_text(hjust = 0.5, face = "bold")))
+print(combined_plot)
+
+ggsave("fig6.png", combined_plot, width = 6, height = 7)
+```
+## Individual Positive Policy Breakdown
+```{r}
+all_pos_policy <- c("fer_treat",
+                "abor_man",
+                "contra_script",
+                "contra_otc_script",
+                "contra_otc_wo_script",
+                "contra_ex_sup",
+                "contra_no_share", 
+                "pros_scr", 
+                "er_dys_man", 
+                "vase",
+                "gen_affirm_man", 
+                "horm_ther")
+
+
+policy_subset <- cosponsor_data %>%
+  filter(type %in% all_pos_policy)
+
+policy_subset <- policy_subset %>%
+  mutate(type = recode(type,
+    "fer_treat" = "Fertility Treat. Mandate",                   
+    "abor_man" = "Abortion Cov. Mandate",
+    "contra_script" = "Rx Contraceptives",
+    "contra_otc_script" = "OTC Contra. w/ Rx",
+    "contra_otc_wo_script" = "OTC Contra. w/o Rx",
+    "contra_ex_supply" = "Extended Supply Contra.",
+    "contra_no_share" = "No Cost-Sharing Contra.",
+    "pros_scr" = "Prostate Screening",
+    "er_dys_man" = "Erectile Dysfunction Cov.",
+    "vase" = "Vasectomies",
+    "gen_affirm_man" = "Gender-Affirming Care",
+    "horm_ther" = "Hormone Therapy"
+  ))
+
+ordered_policy_labels <- rev(c(
+  "Fertility Treat. Mandate",                   
+  "Abortion Cov. Mandate",
+  "Rx Contraceptives",
+  "OTC Contra. w/ Rx",
+  "OTC Contra. w/o Rx",
+  "Extended Supply Contra.",
+  "No Cost-Sharing Contra.",
+  "Prostate Screening",
+  "Erectile Dysfunction Cov.",
+  "Vasectomies",
+  "Gender-Affirming Care",
+  "Hormone Therapy"
+))
+
+policy_subset <- policy_subset %>%
+  mutate(type = factor(type, levels = ordered_policy_labels)) %>% 
+  drop_na()
+```
+
+```{r}
+# updated function specific for individual policies
+make_policy_diverging_plot <- function(df, pos_col, neg_col, title, subtitle = NULL, 
+                                       pos_label = "Group A", neg_label = "Group B",
+                                       fill_colors = c("Group A" = "#2ca02c", "Group B" = "#d62728")) {
+  df %>%
+    group_by(type) %>%
+    summarise(
+      Positive = mean(.data[[pos_col]], na.rm = TRUE),
+      Negative = mean(.data[[neg_col]], na.rm = TRUE)
+    ) %>%
+    mutate(Negative = -Negative) %>%
+    pivot_longer(cols = c("Positive", "Negative"), names_to = "Direction", values_to = "Prop") %>%
+    mutate(Direction = recode(Direction, 
+                              "Positive" = pos_label, 
+                              "Negative" = neg_label)) %>%
+    ggplot(aes(x = type, y = Prop, fill = Direction)) +
+    geom_bar(stat = "identity") +
+    geom_text(aes(label = paste0(abs(round(Prop * 100, 1)), "%")), 
+              position = position_stack(vjust = 0.5),
+              color = "black", size = 3.5, fontface = "bold") +
+    coord_flip() +
+    scale_fill_manual(values = fill_colors) +
+    labs(
+      title = title,
+      subtitle = subtitle,
+      x = NULL,
+      y = NULL,
+      fill = NULL
+    ) +
+    theme_cowplot() +
+    theme(
+      axis.line = element_blank(),
+      axis.ticks = element_blank(),
+      axis.text.x = element_blank(),
+      axis.title.x = element_blank(),
+      legend.position = "right", 
+      plot.title.position = "plot",
+      plot.subtitle = element_text(hjust = 0.5, face = "bold"),
+      axis.text.y = element_text(face = "bold", color = "gray30"),
+      legend.text = element_text(face = "bold"),
+      plot.title = element_text(size = 12))
+}
+```
+
+```{r}
+p_gender_ind <- make_policy_diverging_plot(
+  policy_subset, "prop_spon_women", "prop_spon_men",
+  title = "Fig 9.1",
+  subtitle = "Gender",
+  pos_label = "Women", neg_label = "Men",
+  fill_colors = c("Women" = "#fa236e", "Men" = "#38499f")
+)
+
+p_party_ind <- make_policy_diverging_plot(
+  policy_subset, "prop_spon_dem", "prop_spon_gop",
+  subtitle = "Party",
+  title = "Fig 9.2",
+  pos_label = "Democrat", neg_label = "Republican",
+  fill_colors = c("Democrat" = "#00A08A", "Republican" = "#FF0000")
+)
+
+p_race_ind <- make_policy_diverging_plot(
+  policy_subset, "spon_minority", "prop_spon_white",
+  subtitle = "Race",
+  title = "Fig. 9.3",
+  pos_label = "Racial Minority", neg_label = "White",
+  fill_colors = c("Racial Minority" = "#9A8822", "White" = "#E58601")
+)
+```
+
+```{r}
+combined_plot1 <- (p_gender_ind / p_party_ind / p_race_ind) +
+  plot_annotation(title = "Percentage of Individual Policies Passed by Gender, Party, and Race",
+                  theme = theme(plot.title = element_text(hjust = 0.5, face = "bold")))
+print(combined_plot1)
+
+ggsave("fig7.png", combined_plot1, width = 8, height = 10)
+```
+## Negative policies 
+```{r}
+neg_gender_groups <- list(neg_women = c("abor_lim"),
+                          neg_men = c("er_dys_lim"),
+                          neg_trans = c("gen_affirm_lim"))
+
+cosponsor_data_neg <- cosponsor_data %>%
+  mutate(
+    group_neg = case_when(
+      type %in% neg_gender_groups$neg_women ~ "Abortion Coverage Limits",
+      type %in% neg_gender_groups$neg_men ~ "ED Coverage Limits",
+      type %in% neg_gender_groups$neg_trans ~ "GAHC Coverage Limits",
+      TRUE ~ NA_character_
+    )) %>%
+  filter(!is.na(group_neg))
+```
+
+```{r}
+make_diverging_plot_neg <- function(df, pos_col, neg_col, title, subtitle = NULL, group_col = "group_neg",
+                                pos_label = "Group A", neg_label = "Group B",
+                                fill_colors = c("Group A" = "#2ca02c", "Group B" = "#d62728")) {
+  df %>%
+    group_by(.data[[group_col]]) %>%
+    summarise(
+      Positive = mean(.data[[pos_col]], na.rm = TRUE),
+      Negative = mean(.data[[neg_col]], na.rm = TRUE)
+    ) %>%
+    mutate(Negative = -Negative) %>%
+    pivot_longer(cols = c("Positive", "Negative"), names_to = "Direction", values_to = "Prop") %>%
+    mutate(Direction = recode(Direction, 
+                              "Positive" = pos_label, 
+                              "Negative" = neg_label)) %>%
+    ggplot(aes(x = factor(.data[[group_col]], levels = c("GAHC Coverage Limits","ED Coverage Limits", "Abortion Coverage Limits")), y = Prop, fill = Direction)) +
+    geom_bar(stat = "identity") +
+    geom_text(aes(label = paste0(abs(round(Prop * 100, 1)), "%")), 
+              position = position_stack(vjust = 0.5),
+              color = "black", size = 3.5, fontface = "bold") +
+    coord_flip() +
+    scale_fill_manual(values = fill_colors) +
+    labs(
+      title = title,
+      subtitle = subtitle,
+      x = NULL,
+      y = NULL,
+      fill = NULL
+    ) +
+    theme_cowplot() +
+    theme(
+      axis.line = element_blank(),
+      axis.ticks = element_blank(),
+      axis.text.x = element_blank(),
+      axis.title.x = element_blank(),
+      legend.position = "right", 
+      plot.title.position = "plot",
+      plot.subtitle = element_text(hjust = 0.5, face = "bold"),  
+      axis.text.y = element_text(face = "bold", color = "gray30"),  
+      legend.text = element_text(face = "bold"),
+      plot.title = element_text(size = 12))
+ }
+```
+
+
+```{r}
+# Gender panel
+p_gender_neg <- make_diverging_plot_neg(
+  cosponsor_data_neg, "prop_spon_women", "prop_spon_men",
+  title = "Fig 10.1",
+  subtitle = "Gender",
+  pos_label = "Women", neg_label = "Men",
+  fill_colors = c("Women" = "#fa236e", "Men" = "#38499f")
+)
+
+# Party panel
+p_party_neg <- make_diverging_plot_neg(
+  cosponsor_data_neg, "prop_spon_dem", "prop_spon_gop",
+  subtitle = "Party",
+  title = "Fig 10.2",
+  pos_label = "Democrat", neg_label = "Republican",
+  fill_colors = c("Democrat" = "#00A08A", "Republican" = "#FF0000")
+)
+
+# Race panel
+p_race_neg <- make_diverging_plot_neg(
+  cosponsor_data_neg, "spon_minority", "prop_spon_white",
+  subtitle = "Race",
+  title = "Fig. 10.3",
+  pos_label = "Racial Minority", neg_label = "White",
+  fill_colors = c("Racial Minority" = "#9A8822", "White" = "#E58601")
+)
+```
+
+```{r}
+combined_plot2 <- (p_gender_neg / p_party_neg / p_race_neg) +
+  plot_annotation(title = "Percentage of Limitative Policies Passed by Gender, Party, and Race",
+                  theme = theme(plot.title = element_text(hjust = 0.5, face = "bold")))
+
+print(combined_plot2) 
+
+ggsave("fig8.png", combined_plot2, width = 6, height = 7)
+```
+## Ignore plz
+```{r}
+# filter just abortion restriction bills
+abortion_data <- cosponsor_data_neg %>%
+  filter(group_neg == "Abortion Coverage Limits")
+
+p_gender_neg <- abortion_data %>%
+  summarise(
+    Women = mean(prop_spon_women, na.rm = TRUE),
+    Men = mean(prop_spon_men, na.rm = TRUE)
+  ) %>%
+  mutate(Men = -Men) %>%
+  pivot_longer(cols = c("Women","Men"), names_to = "Group", values_to = "Prop") %>%
+  ggplot(aes(x = "Abortion Coverage Limits", y = Prop, fill = Group)) +
+  geom_bar(stat = "identity") +
+  geom_text(aes(label = paste0(abs(round(Prop * 100, 1)), "%")),
+            position = position_stack(vjust = 0.5),
+            color = "black", size = 3.5, fontface = "bold") +
+  coord_flip() +
+  scale_fill_manual(values = c("Women" = "#fa236e", "Men" = "#38499f")) +
+  labs(subtitle = "Gender", x = NULL, y = NULL, fill = NULL) +
+  theme_minimal() +
+  theme(
+      axis.line = element_blank(),
+      axis.ticks = element_blank(),
+      axis.text.x = element_blank(),
+      axis.title.x = element_blank(),
+      axis.ticks.y = element_blank(),
+      axis.text.y = element_blank(),
+      axis.title.y = element_blank(),
+      legend.position = "right", 
+      plot.title.position = "plot",
+      plot.subtitle = element_text(hjust = 0.5, face = "bold"),  
+      legend.text = element_text(face = "bold"),
+       panel.background = element_rect(fill = NA, color = NA),
+    plot.background  = element_rect(fill = NA, color = NA)
+  )
+
+p_party_neg <- abortion_data %>%
+  summarise(
+    Democrat = mean(prop_spon_dem, na.rm = TRUE),
+    Republican = mean(prop_spon_gop, na.rm = TRUE)
+  ) %>%
+  mutate(Republican = -Republican) %>%
+  pivot_longer(cols = c("Democrat","Republican"), names_to = "Group", values_to = "Prop") %>%
+  ggplot(aes(x = "Abortion Coverage Limits", y = Prop, fill = Group)) +
+  geom_bar(stat = "identity") +
+  geom_text(aes(label = paste0(abs(round(Prop * 100, 1)), "%")),
+            position = position_stack(vjust = 0.5),
+            color = "black", size = 3.5, fontface = "bold") +
+  coord_flip() +
+  scale_fill_manual(values = c("Democrat" = "#00A08A", "Republican" = "#FF0000")) +
+  labs(subtitle = "Party", x = NULL, y = NULL, fill = NULL) +
+  theme_minimal() +
+  theme(
+      axis.line = element_blank(),
+      axis.ticks = element_blank(),
+      axis.text.x = element_blank(),
+      axis.title.x = element_blank(),
+      axis.ticks.y = element_blank(),
+      axis.text.y = element_blank(),
+      axis.title.y = element_blank(),
+      legend.position = "right", 
+      plot.title.position = "plot",
+      plot.subtitle = element_text(hjust = 0.5, face = "bold"),  
+      legend.text = element_text(face = "bold"),
+       panel.background = element_rect(fill = NA, color = NA),
+    plot.background  = element_rect(fill = NA, color = NA)
+  )
+
+p_race_neg <- abortion_data %>%
+  summarise(
+    `Racial Minority` = mean(spon_minority, na.rm = TRUE),
+    White = mean(prop_spon_white, na.rm = TRUE)
+  ) %>%
+  mutate(White = -White) %>%
+  pivot_longer(cols = c("Racial Minority","White"), names_to = "Group", values_to = "Prop") %>%
+  ggplot(aes(x = "Abortion Coverage Limits", y = Prop, fill = Group)) +
+  geom_bar(stat = "identity") +
+  geom_text(aes(label = paste0(abs(round(Prop * 100, 1)), "%")),
+            position = position_stack(vjust = 0.5),
+            color = "black", size = 3.5, fontface = "bold") +
+  coord_flip() +
+  scale_fill_manual(values = c("Racial Minority" = "#9A8822", "White" = "#E58601")) +
+  labs(subtitle = "Race", x = NULL, y = NULL, fill = NULL) +
+  theme_minimal() +
+  theme(
+      axis.line = element_blank(),
+      axis.ticks = element_blank(),
+      axis.text.x = element_blank(),
+      axis.title.x = element_blank(),
+      axis.ticks.y = element_blank(),
+      axis.text.y = element_blank(),
+      axis.title.y = element_blank(),
+      legend.position = "right", 
+      plot.title.position = "plot",
+      plot.subtitle = element_text(hjust = 0.5, face = "bold"),  
+      legend.text = element_text(face = "bold"),
+    panel.background = element_rect(fill = NA, color = NA),
+    plot.background  = element_rect(fill = NA, color = NA)
+  )
+
+```
+
+# Ignore plz (again)
+```{r}
+haha <- (p_gender_neg / p_party_neg / p_race_neg) + 
+  plot_annotation(title = "Percentage of Policies Passed by Gender, Party, and Race")
+
+ggsave("haha.png", plot = haha, width = 7, height = 3)
+```
+
+

@@ -1,0 +1,166 @@
+---
+title: "p2.5"
+author: "Huizenga"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r}
+library("wru")
+library(dplyr)
+library(tidyr)
+library(stringr)
+library(usethis)
+library(writexl)
+```
+## Prediction 
+```{r}
+practice <- read.csv("/Users/emmahuizenga/Desktop/IPPSR/Project 2/Copy of cosponsor_data for R practice - Cosponsor Data.csv")
+```
+
+```{r}
+practice <- practice %>% 
+  select("state", "year", "type", "source", "spon_names_clean") %>% 
+  filter(str_trim(spon_names_clean) != "")
+```
+
+```{r}
+long_data_practice <- practice %>%
+  separate_rows(spon_names_clean, sep = ",\\s*") %>%
+  rename(name = spon_names_clean) %>%
+  mutate(surname = word(name, -2))
+```
+
+```{r}
+usethis::edit_r_environ()
+
+```
+
+```{r}
+predicted_practice <- predict_race(voter.file = long_data_practice,
+                          surname.only = TRUE)  
+```
+
+```{r}
+predicted_practice <- predicted_practice %>%
+  mutate(race = case_when(
+    pred.whi == pmax(pred.whi, pred.bla, pred.his, pred.asi, pred.oth) ~ "White",
+    pred.bla == pmax(pred.whi, pred.bla, pred.his, pred.asi, pred.oth) ~ "Black",
+    pred.his == pmax(pred.whi, pred.bla, pred.his, pred.asi, pred.oth) ~ "Hispanic",
+    pred.asi == pmax(pred.whi, pred.bla, pred.his, pred.asi, pred.oth) ~ "Asian",
+    TRUE ~ "Other"
+  ))
+```
+
+
+```{r}
+race_counts <- predicted_practice %>%
+  group_by(source, type, state, year) %>%
+  count(race) %>%
+  pivot_wider(names_from = race, values_from = n, values_fill = 0)
+```
+
+
+```{r}
+final_practice <- practice %>% 
+  left_join(race_counts, by = c("source", "type", "state", "year"))
+```
+
+## Using Actual Race Data to merge with existing data 
+
+```{r}
+cosponser_data <- read.csv("/Users/emmahuizenga/Desktop/IPPSR/Project 2/Copy of cosponsor_data pt. 2 for R - Cosponsor Data.csv")
+
+cosponser_data <- cosponser_data %>% 
+  select("state", "year", "type", "source", "spon_names_clean") %>% 
+  filter(str_trim(spon_names_clean) != "") %>% 
+  filter(year %in% c(2021, 2022))
+```
+
+
+```{r}
+long_data_cosponser <- cosponser_data %>%
+  mutate(
+    # Extract all legislator chunks into a list-column
+    spon_list = str_extract_all(
+      spon_names_clean,
+      "(Rep\\.|Sen\\.|Del\\.|Asm\\.)\\s+[A-Z][a-zA-Z\\-]+(?:\\s+[A-Z][a-zA-Z\\-]+)*\\s*\\[.*?\\]"
+    )
+  ) %>%
+  unnest(spon_list) %>%  # Turn list into long rows
+  mutate(
+    spon_names_clean = spon_list,
+    spon_names_clean = str_remove(spon_names_clean, "^(Del\\.|Sen\\.|Rep\\.|Asm\\.)\\s*"),  # Remove title
+    spon_names_clean = str_remove(spon_names_clean, "\\s*\\[.*\\]$"),  # Remove [D], [R], etc.
+    spon_names_clean = str_trim(spon_names_clean)
+  ) %>%
+  select(-spon_list)
+```
+
+```{r}
+# Convert "First Last" to "Last, First"
+long_data_cosponser <- long_data_cosponser %>%
+  mutate(
+    last_name = word(spon_names_clean, -1),
+    first_name = word(spon_names_clean, 1, -2),
+    spon_match_name = paste0(last_name, ", ", first_name)
+  )
+```
+
+```{r}
+race_data <- read.csv("/Users/emmahuizenga/Desktop/IPPSR/Project 2/Copy of The 2021-2 State Legislators Dataset Version 1.6 (2024-08-01) - Data (XLSX).csv")
+
+race_data <- race_data %>% 
+  select("NameLastFirstM", "RaceCoded", "StateAbbrev") %>% 
+  rename(spon_match_name = NameLastFirstM) %>% 
+  mutate(
+    spon_match_name = str_remove(spon_match_name, "^Jr\\.\\s*"),
+    spon_match_name = str_replace(spon_match_name, "^([^,]+),\\s*(Jr\\.|Sr\\.|III|IV),\\s*", "\\1, "),
+    spon_match_name = str_remove(spon_match_name, '\\".*\\"'),
+    spon_match_name = str_remove(spon_match_name, "\\s+[A-Z]\\.?$"),
+    spon_match_name = str_remove(spon_match_name, "\\s+(Jr\\.|Sr\\.|III|IV)$"),
+    spon_match_name = str_squish(spon_match_name)
+  ) %>% 
+  filter(!str_detect(spon_match_name, regex("vacant", ignore_case = TRUE)))
+```
+
+```{r}
+abbr_to_full <- data.frame(
+  state = state.name,
+  abbr = state.abb,
+  stringsAsFactors = FALSE
+)
+
+race_data <- race_data %>%
+  left_join(abbr_to_full, by = c("StateAbbrev" = "abbr")) %>% 
+  select(-StateAbbrev)
+```
+
+```{r}
+merged_data <- long_data_cosponser %>%
+  left_join(race_data, by = c("spon_match_name", "state"))
+```
+
+```{r}
+table(is.na(merged_data$RaceCoded))
+```
+
+```{r}
+race_counts <- merged_data %>%
+  group_by(state, year, type, source, RaceCoded) %>%
+  summarise(n_cosponsors = n(), .groups = "drop")
+```
+
+```{r}
+race_counts_wide <- race_counts %>%
+  pivot_wider(names_from = RaceCoded, values_from = n_cosponsors, values_fill = 0)
+```
+
+```{r}
+write_xlsx(race_counts_wide, "race_counts_wide.xlsx")
+```
+
+```{r}
+getwd()
+```
+

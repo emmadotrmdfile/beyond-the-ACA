@@ -1,0 +1,972 @@
+---
+title: "Project 2"
+author: "Huizenga"
+date: '`r Sys.Date()`'
+output: html_document
+---
+
+```{r}
+library(broom)
+library(ggplot2)
+library(dplyr)
+library(plm)
+library(patchwork)
+library(grid)
+library(cowplot)
+library(ggtext)
+library(knitr)
+library(flextable)
+library(officer)
+library(tidyr)
+```
+
+## Loading Data & Merging
+
+```{r}
+leg <- read.csv("/Users/emmahuizenga/Desktop/IPPSR/Project 2/data/Gender Comp in State Leg.xlsx - Legislature Data.csv")
+
+policy <- read.csv("/Users/emmahuizenga/Desktop/IPPSR/Project 2/data/(Shortened) CSPP_ State-Level Mandated Insurance Coverage - policy.csv") %>% 
+  select(-"any_policy")
+```
+
+```{r}
+gems <- left_join(leg, policy, by = c("state", "year"))
+```
+
+## Unadjusted Model Women, positve grouping
+
+```{r}
+dependent_variables_women = c("pos_women", "abor_man", "fer_treat", "contra_all", "contra_script", "contra_otc_script", "contra_otc_wo_script", "contra_ex_sup", "contra_no_share")
+```
+
+```{r}
+models_women <- list()
+
+for (dv in dependent_variables_women) {
+  formula <- as.formula(paste(dv, "~ prop_leg_women")) #creating formula (dv ~ treatment) to insert into plm
+  model <- plm(formula, data = gems, index = c("state", "year")) #running model with all dvs, saving it in "model"
+  models_women[[dv]] <- model #saving all models in empty list models_women with 
+}
+
+models_women
+
+tidy_models_women <- bind_rows(                             # combining all model outputs into one data frame
+  lapply(names(models_women), function(dv) {                # loop over the names of the models (each name is a dependent variable)
+    tidy(models_women[[dv]], conf.int = TRUE) %>%   # tidy the model output and include confidence intervals
+      mutate(dependent_variable = dv)                      # adding a column for the dependent variable name
+  }), 
+  .id = "model"                                             # adding a column named 'model' to identify the source model for each row
+)
+
+tidy_models_women
+```
+
+## Unadjusted Model Men, positive grouping
+
+```{r}
+dependent_variables_men = c("pos_men", "pros_scr", "er_dys_man", "vase")
+```
+
+```{r}
+models_men <- list()
+
+for (dv in dependent_variables_men) {
+  formula <- as.formula(paste(dv, "~ prop_leg_women"))
+  model <- plm(formula, data = gems, index = c("state", "year"))
+  models_men[[dv]] <- model
+}
+
+models_men
+
+tidy_models_men <- bind_rows(lapply(names(models_men), function(dv) {
+  tidy(models_men[[dv]], conf.int = TRUE) %>%
+    mutate(dependent_variable = dv)  
+}), .id = "model")
+
+tidy_models_men
+```
+
+## Unadjusted Model Trans, positive grouping
+
+```{r}
+dependent_variables_trans = c("pos_trans", "gen_affirm_man", "horm_ther")
+```
+
+```{r}
+models_trans <- list()
+
+for (dv in dependent_variables_trans) {
+  formula <- as.formula(paste(dv, "~ prop_leg_women"))
+  model <- plm(formula, data = gems, index = c("state", "year"))
+  models_trans[[dv]] <- model
+}
+
+models_trans
+
+tidy_models_trans <- bind_rows(lapply(names(models_trans), function(dv) {
+  tidy(models_trans[[dv]], conf.int = TRUE) %>%
+    mutate(dependent_variable = dv)  
+}), .id = "model")
+
+tidy_models_trans
+```
+
+## Adjusted Model Women, positive grouping
+
+```{r}
+# confounders
+gems$dem_prop <- gems$leg_dem_all / (gems$leg_dem_all + gems$leg_rep_all + gems$leg_thi_all)
+gems$dem_leg_maj <- gems$dem_prop > 0.5
+```
+
+```{r}
+models_women_part <- list()
+
+for (dv in dependent_variables_women) {
+  formula <- as.formula(paste(dv, "~ prop_leg_women + dem_prop + dem_leg_maj"))  # used to be `leg_dem_all`
+  model <- plm(formula, data = gems, index = c("state", "year")) 
+  models_women_part[[dv]] <- model
+}
+
+models_women_part
+
+tidy_models_women_part <- bind_rows(                            
+  lapply(names(models_women_part), function(dv) {               
+    tidy(models_women_part[[dv]], conf.int = TRUE) %>%   
+      mutate(dependent_variable = dv)                      
+  }), 
+  .id = "model"                                             
+)
+
+tidy_models_women_part
+```
+
+## Adjusted Model Men, positive grouping
+
+```{r}
+models_men_part <- list()
+
+for (dv in dependent_variables_men) {
+  formula <- as.formula(paste(dv, "~ prop_leg_women + dem_prop + dem_leg_maj"))
+  model <- plm(formula, data = gems, index = c("state", "year"))
+  models_men_part[[dv]] <- model
+}
+
+models_men_part
+
+tidy_models_men_part <- bind_rows(
+  lapply(names(models_men_part), function(dv) {
+    tidy(models_men_part[[dv]], conf.int = TRUE) %>%
+      mutate(dependent_variable = dv)  
+}), .id = "model")
+
+tidy_models_men_part
+```
+
+## Adjusted Model Trans, positive grouping
+
+```{r}
+models_trans_part <- list()
+
+for (dv in dependent_variables_trans) {
+  formula <- as.formula(paste(dv, "~ prop_leg_women + dem_prop + dem_leg_maj"))
+  model <- plm(formula, data = gems, index = c("state", "year"))
+  models_trans_part[[dv]] <- model
+}
+
+models_trans_part
+
+tidy_models_trans_part <- bind_rows(
+  lapply(names(models_trans_part), function(dv) {
+    tidy(models_trans_part[[dv]], conf.int = TRUE) %>%
+     mutate(dependent_variable = dv)  
+}), .id = "model")
+
+tidy_models_trans_part
+```
+
+## Regression W/O Fixed Effects for Women, positive grouping & controlling for partisanship
+
+```{r}
+models_women_lm <- list()
+
+for (dv in dependent_variables_women) {
+  formula <- as.formula(paste(dv, "~ prop_leg_women + dem_prop + dem_leg_maj")) 
+  model <- lm(formula, data = gems) 
+  models_women_lm[[dv]] <- model 
+}
+
+models_women_lm
+
+tidy_models_women_lm <- bind_rows(lapply(names(models_women_lm), function(dv) {
+  tidy(models_women_lm[[dv]], conf.int = TRUE) %>%
+    mutate(dependent_variable = dv)  
+}), .id = "model")
+
+tidy_models_women_lm
+```
+
+## Regression W/O Fixed Effects for Men, positive grouping & controlling for partisanship
+
+```{r}
+models_men_lm <- list()
+
+for (dv in dependent_variables_men) {
+  formula <- as.formula(paste(dv, "~ prop_leg_women + dem_prop + dem_leg_maj"))  
+  model <- lm(formula, data = gems)  
+  models_men_lm[[dv]] <- model  
+}
+
+models_men_lm
+
+tidy_models_men_lm <- bind_rows(lapply(names(models_men_lm), function(dv) {
+  tidy(models_men_lm[[dv]], conf.int = TRUE) %>%
+    mutate(dependent_variable = dv)  
+}), .id = "model")
+
+tidy_models_men_lm
+```
+
+## Regression W/O Fixed Effects for Trans, positive grouping & controlling for partisanship
+
+```{r}
+models_trans_lm <- list()
+
+for (dv in dependent_variables_trans) {
+  formula <- as.formula(paste(dv, "~ prop_leg_women + dem_prop + dem_leg_maj" ))  
+  model <- lm(formula, data = gems)  
+  models_trans_lm[[dv]] <- model  
+}
+
+models_trans_lm
+
+tidy_models_trans_lm <- bind_rows(lapply(names(models_trans_lm), function(dv) {
+  tidy(models_trans_lm[[dv]], conf.int = TRUE) %>%
+    mutate(dependent_variable = dv)  
+}), .id = "model")
+
+tidy_models_trans_lm
+```
+
+## Combinding unadj., adj., & OLS models into dfs for plotting
+
+```{r}
+tidy_models_women <- tidy_models_women %>%
+  mutate(model_type = "Unadjusted")
+
+tidy_models_women_part <- tidy_models_women_part %>%
+  mutate(model_type = "Adjusted")
+
+tidy_models_women_lm <- tidy_models_women_lm %>% 
+  mutate(model_type = "OLS")
+
+df_women <- bind_rows(tidy_models_women, tidy_models_women_part, tidy_models_women_lm) %>%
+  filter(term == "prop_leg_women")
+```
+
+```{r}
+tidy_models_men <- tidy_models_men %>%
+  mutate(model_type = "Unadjusted")
+
+tidy_models_men_part <- tidy_models_men_part %>%
+  mutate(model_type = "Adjusted")
+
+tidy_models_men_lm <- tidy_models_men_lm %>%
+  mutate(model_type = "OLS")
+
+df_men <- bind_rows(tidy_models_men, tidy_models_men_part, tidy_models_men_lm) %>%
+  filter(term == "prop_leg_women")
+```
+
+```{r}
+tidy_models_trans <- tidy_models_trans %>%
+  mutate(model_type = "Unadjusted")
+
+tidy_models_trans_part <- tidy_models_trans_part %>%
+  mutate(model_type = "Adjusted")
+
+tidy_models_trans_lm <- tidy_models_trans_lm %>%
+  mutate(model_type = "OLS")
+
+df_trans <- bind_rows(tidy_models_trans, tidy_models_trans_part, tidy_models_trans_lm) %>%
+  filter(term == "prop_leg_women")
+```
+
+## Visualization Women
+
+```{r}
+df_women$dependent_variable <- factor(
+  df_women$dependent_variable,
+  levels = rev(dependent_variables_women) 
+)
+
+df_women$model_type <- factor(df_women$model_type, levels = c("OLS", "Adjusted", "Unadjusted"))
+
+df_women$dependent_variable <- forcats::fct_recode(
+  df_women$dependent_variable,
+  "**Women Agg.**" = "pos_women",
+  "Fertility Treat. Mandate" = "fer_treat", 
+  "Abortion Cov. Mandate" = "abor_man", 
+  "**Contraceptives Agg.**" = "contra_all",
+  "Rx Contraceptives" = "contra_script", 
+  "OTC Contra. w/ Rx" = "contra_otc_script", 
+  "OTC Contra. w/o Rx" = "contra_otc_wo_script", 
+  "Extended Supply Contra." = "contra_ex_sup", 
+  "No Cost-Sharing Contra." = "contra_no_share"
+)
+
+p1 <- ggplot(data = df_women, aes(x = estimate, y = dependent_variable, color = model_type)) +
+  geom_point(position = position_dodge(width = 0.5), size = 1.5) +
+  geom_errorbar(aes(xmin = conf.low, xmax = conf.high),
+                position = position_dodge(width = 0.5), width = 0.2) +
+  annotate("rect", xmin = -.25, xmax = 1.4, ymin = .75, ymax = 9.25, 
+           fill = "grey", alpha = 0.2) +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "black") + 
+  labs(x = expression(tau ~ "(" * "Average Treatment Effect" * ")"),
+       y = "Women-Friendly Policies",
+       title = "ATEs on Women-Friendly Policy Outcomes",
+       subtitle = "Fig. 2.1") +
+  theme_cowplot() +
+  theme(axis.text.y = ggtext::element_markdown()) +
+  scale_color_manual(values = c(
+  "Unadjusted" = "#ef97b7",  
+  "Adjusted" = "#e13b77", 
+  "OLS" = "grey30")) +
+  theme(
+    legend.position = c(0.69, 0.13),
+    legend.background = element_rect(fill = alpha("white", 0.6), color = NA),
+    legend.title = element_blank()
+  ) + 
+  guides(color = guide_legend(
+    override.order = TRUE,
+    reverse = TRUE  # flips the legend order
+  )) +
+   theme(plot.title.position = "plot",
+         plot.title = element_text(hjust = .5),        
+         plot.subtitle = element_text(face = "bold",
+                                      size = 15)) 
+
+p1
+
+ggsave("women.png", p1, width = 8, height = 5)
+```
+
+## Visualization Men
+
+```{r}
+df_men$dependent_variable <- factor(
+  df_men$dependent_variable,
+  levels = rev(dependent_variables_men) 
+)
+
+df_men$model_type <- factor(df_men$model_type, levels = c("OLS", "Adjusted", "Unadjusted"))
+
+df_men$dependent_variable <- forcats::fct_recode(
+  df_men$dependent_variable,
+  "Erectile Dysfunction Cov." = "er_dys_man", 
+  "PCa Screening" = "pros_scr", 
+  "**Men Agg.**" = "pos_men",
+  "Vasectomies" = "vase"
+)
+
+p2 <- ggplot(data = df_men, aes(x = estimate, y = dependent_variable, color = model_type)) +
+  geom_point(position = position_dodge(width = 0.5), size = 1.5) +
+  geom_errorbar(aes(xmin = conf.low, xmax = conf.high),
+                position = position_dodge(width = 0.5), width = 0.2) +
+  annotate("rect", xmin = -.325, xmax = .65, ymin = .55 , ymax = 4.5, 
+           fill = "gray", alpha = 0.2) +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "black") + 
+  labs(x = expression(tau ~ "(" * "Average Treatment Effect" * ")"),
+       y = "Men-Friendly Policies",
+       title = "ATEs on Men-Friendly Policy Outcomes",
+       subtitle = "Fig. 3.1") +
+  theme_cowplot() +
+  theme(axis.text.y = ggtext::element_markdown()) +
+  scale_color_manual(values = c(
+  "Unadjusted" = "#a59eef",  
+  "Adjusted"   = "#4d3df1",
+  "OLS" = "grey30")) +
+  theme(
+    legend.position = c(0.7, 0.14), 
+    legend.background = element_rect(fill = alpha("white", 0.6), color = NA),
+    legend.title = element_blank(),
+    plot.title.position = "plot",
+    plot.title = element_text(hjust = .5),        
+    plot.subtitle = element_text(face = "bold",
+                                      size = 15)) +
+  guides(color = guide_legend(
+    override.order = TRUE,
+    reverse = TRUE  
+  ))
+
+p2
+
+ggsave("men.png", p2, width = 8, height = 5)
+```
+
+## Visualization Trans
+
+```{r}
+df_trans$dependent_variable <- factor(
+  df_trans$dependent_variable,
+  levels = rev(dependent_variables_trans) 
+)
+
+df_trans$model_type <- factor(df_trans$model_type, levels = c("OLS", "Adjusted", "Unadjusted"))
+
+df_trans$dependent_variable <- forcats::fct_recode(
+  df_trans$dependent_variable,
+  "**Trans Agg.**" = "pos_trans",
+  "Gender Affirming Care" = "gen_affirm_man", 
+  "Hormone Therapy" = "horm_ther", 
+)
+
+p3 <- ggplot(data = df_trans, aes(x = estimate, y = dependent_variable, color = model_type)) +
+  geom_point(position = position_dodge(width = 0.5), size = 1.5) +
+  geom_errorbar(aes(xmin = conf.low, xmax = conf.high),
+                position = position_dodge(width = 0.5), width = 0.2) +
+  annotate("rect", xmin = -.05, xmax = .75, ymin = .55, ymax = 3.5, 
+           fill = "gray", alpha = 0.2) +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "black") + 
+  labs(x = expression(tau ~ "(" * "Average Treatment Effect" * ")"),
+       y = "Trans-Friendly Policies",
+       title = "ATEs on Trans-Friendly Policy Outcomes",
+       subtitle = "Fig. 4.1") +
+  theme_cowplot() +
+  theme(axis.text.y = ggtext::element_markdown()) +
+  scale_color_manual(values = c(
+  "Unadjusted" = "#b88ec9",  
+  "Adjusted"   = "#A442ca", 
+  "OLS" = "grey30")) +
+  theme(
+    legend.position = c(0.69, 0.14),  
+    legend.background = element_rect(fill = alpha("white", 0.6), color = NA),
+    legend.title = element_blank(), 
+    plot.title.position = "plot",
+    plot.title = element_text(hjust = .5),        
+    plot.subtitle = element_text(face = "bold",
+                                      size = 15)) +
+  guides(color = guide_legend(
+    override.order = TRUE,
+    reverse = TRUE  
+  ))
+
+p3
+
+ggsave("trans.png", p3, width = 8, height = 5)
+```
+
+## Negative grouping using all 3 models
+
+```{r}
+dependent_variables_negative = c("neg_women", "neg_men", "neg_trans", "neg_minor", "neg_all")
+```
+
+# Unadjusted model
+
+```{r}
+models_neg_unadj <- list()
+
+for (dv in dependent_variables_negative) {
+  formula <- as.formula(paste(dv, "~ prop_leg_women"))
+  model <- plm(formula, data = gems, index = c("state", "year"))
+  models_neg_unadj[[dv]] <- model
+}
+
+print(models_neg_unadj)
+
+tidy_models_neg_unadj <- bind_rows(lapply(names(models_neg_unadj), function(dv) {
+  tidy(models_neg_unadj[[dv]], conf.int = TRUE) %>%
+    mutate(dependent_variable = dv)  
+}), .id = "model")
+
+print(tidy_models_neg_unadj)
+```
+
+
+# Adjusted model
+
+```{r}
+models_neg <- list()
+
+for (dv in dependent_variables_negative) {
+  formula <- as.formula(paste(dv, "~ prop_leg_women + dem_prop + dem_leg_maj"))
+  model <- plm(formula, data = gems, index = c("state", "year"))
+  models_neg[[dv]] <- model
+}
+
+print(models_neg)
+
+tidy_models_neg <- bind_rows(lapply(names(models_neg), function(dv) {
+  tidy(models_neg[[dv]], conf.int = TRUE) %>%
+    mutate(dependent_variable = dv)  
+}), .id = "model")
+
+print(tidy_models_neg)
+```
+
+# OLS model
+
+```{r}
+models_neg_ols <- list()
+
+for (dv in dependent_variables_negative) {
+  formula <- as.formula(paste(dv, "~ prop_leg_women"))
+  model <- lm(formula, data = gems, index = c("state", "year"))
+  models_neg_ols[[dv]] <- model
+}
+
+print(models_neg_ols)
+
+tidy_models_neg_ols <- bind_rows(lapply(names(models_neg_ols), function(dv) {
+  tidy(models_neg_ols[[dv]], conf.int = TRUE) %>%
+    mutate(dependent_variable = dv)  
+}), .id = "model")
+
+print(tidy_models_neg_ols)
+```
+
+
+## Visualization for Neg. Policies
+```{r}
+tidy_models_neg_unadj <- tidy_models_neg_unadj %>%
+  mutate(model_type = "Unadjusted")
+
+tidy_models_neg <- tidy_models_neg %>%
+  mutate(model_type = "Adjusted")
+
+tidy_models_neg_ols <- tidy_models_neg_ols %>%
+  mutate(model_type = "OLS")
+
+df_neg <- bind_rows(tidy_models_neg_unadj, tidy_models_neg, tidy_models_neg_ols) %>%
+  filter(term == "prop_leg_women")
+```
+
+
+```{r}
+df_neg$dependent_variable <- factor(
+  df_neg$dependent_variable,
+  levels = rev(dependent_variables_negative) 
+)
+
+df_neg$model_type <- factor(df_neg$model_type, levels = c("OLS", "Adjusted", "Unadjusted"))
+
+df_neg$dependent_variable <- forcats::fct_recode(
+  df_neg$dependent_variable,
+  "Abortion" = "neg_women",
+  "Erectile Dysfunction" = "neg_men", 
+  "Gender Affirming Care" = "neg_trans", 
+  "Negative Policies for Minorities" = "neg_minor",
+  "All Negative Policies" = "neg_all"
+)
+
+neg <- ggplot(data = df_neg, aes(x = estimate, y = dependent_variable, color = model_type)) +
+  annotate("rect", xmin = -.75, xmax = .38, ymin = .6, ymax = 5.5, 
+           fill = "grey", alpha = 0.2) +
+  geom_point(position = position_dodge(width = 0.5), size = 1.5) +
+  geom_errorbar(aes(xmin = conf.low, xmax = conf.high),
+                position = position_dodge(width = 0.5), width = 0.2) +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "black") + 
+  labs(x = expression(tau ~ "(" * "Average Treatment Effect" * ")"),
+       y = "Limitation Policies",
+       title = "ATEs on Limitation Policy Outcomes",
+       subtitle = "Fig. 7") +
+  theme_cowplot() +
+  theme(axis.text.y = ggtext::element_markdown()) +
+  scale_color_manual(values = c(
+  "Unadjusted" = "#FF745C",  
+  "Adjusted" = "#9D0606", 
+  "OLS" = "grey30")) +
+  theme(axis.text.y = ggtext::element_markdown(),
+        plot.title.position = "plot",
+        legend.position = c(0.69, 0.13),
+        legend.background = element_rect(fill = alpha("white", 0.6), color = NA),
+        plot.title = element_text(hjust = .5),        
+        plot.subtitle = element_text(face = "bold",
+                                      size = 15),
+        legend.title = element_blank()) +
+  guides(color = guide_legend(
+    override.order = TRUE,
+    reverse = TRUE))
+
+ggsave("neg.png", neg, width = 8, height = 5)
+
+neg
+```
+
+## Plotting unadj., adj., and ols regressions for aggregated women-friendly policy
+
+```{r}
+model_adj <- models_women_part[["pos_women"]]
+model_unadj <- models_women[["pos_women"]]
+model_ols <- models_women_lm[["pos_women"]]
+
+coefs_adj <- tidy(model_adj, conf.int = TRUE)
+coefs_unadj <- tidy(model_unadj, conf.int = TRUE)
+coefs_ols <- tidy(model_ols, conf.int = TRUE)
+
+tau_adj <- coefs_adj %>% filter(term == "prop_leg_women") %>% pull(estimate)
+beta1_adj <- coefs_adj %>% filter(term == "dem_prop") %>% pull(estimate)
+
+tau_unadj <- coefs_unadj %>% filter(term == "prop_leg_women") %>% pull(estimate)
+beta1_unadj <- 0
+
+tau_ols <- coefs_ols %>% filter(term == "prop_leg_women") %>% pull(estimate)
+beta1_ols <- coefs_ols %>% filter(term == "dem_prop") %>% pull(estimate)
+```
+
+```{r}
+new_data <- tibble(
+  prop_leg_women = seq(0, 1, by = 0.01),
+  dem_prop = mean(gems$dem_prop, na.rm = TRUE)
+)
+
+new_data <- new_data %>%
+  mutate(
+    predicted_unadj = tau_unadj * prop_leg_women + beta1_unadj * dem_prop,
+    predicted_adj = tau_adj * prop_leg_women + beta1_adj * dem_prop,
+    predicted_ols = tau_ols * prop_leg_women + beta1_ols * dem_prop
+)
+```
+
+```{r}
+new_data_long <- new_data %>%
+  pivot_longer(
+    cols = starts_with("predicted_"),
+    names_to = "model",
+    values_to = "predicted"
+  )
+```
+
+```{r}
+new_data_long$model <- factor(new_data_long$model, 
+                              levels = c("predicted_unadj", "predicted_adj", "predicted_ols"))
+
+predict_women <- ggplot(new_data_long, aes(x = prop_leg_women, y = predicted, color = model)) +
+  geom_line() +
+  annotate("rect", xmin = 0, xmax = 1, ymin = -.05, ymax = 1, 
+           fill = "grey", alpha = 0.2) +
+  scale_color_manual(values = c(
+    "predicted_unadj" = "#ef97b7", 
+    "predicted_adj" = "#e13b77", 
+    "predicted_ols" = "grey30"
+  ),
+  labels = c(
+    "predicted_unadj" = "Unadjusted", 
+    "predicted_adj" = "Adjusted", 
+    "predicted_ols" = "OLS"
+  )) +
+  labs(
+    x = "Proportion of Women in Legislature",
+    y = "Probability of Policy Being Enacted",
+    subtitle = "Fig. 2.2",
+    title = "Estimated Effect of Women’s Representation on Women-Friendly Policy",
+    caption  = "NOTE: Displays aggregated variable treatment effects only",
+    color = "Model Type"
+  ) +
+  theme_cowplot() +
+  theme(legend.position = c(0.76, 0.15),  
+        legend.background = element_rect(fill = alpha("white", 0.6), color = NA),
+        legend.title = element_blank(), 
+        plot.title.position = "plot",
+        plot.caption = element_text(hjust = 0, face= "italic"),
+        plot.caption.position =  "plot",
+        plot.title = element_text(hjust = .5),        
+        plot.subtitle = element_text(face = "bold",
+                                      size = 15)) 
+
+predict_women
+
+ggsave("predict_women.png", predict_women, width = 8, height = 5)
+```
+
+## Plotting unadj., adj., and ols regressions for aggregated men-friendly policy
+
+```{r}
+model_adj <- models_men_part[["pos_men"]]
+model_unadj <- models_men[["pos_men"]]
+model_ols <- models_men_lm[["pos_men"]]
+
+coefs_adj <- tidy(model_adj, conf.int = TRUE)
+coefs_unadj <- tidy(model_unadj, conf.int = TRUE)
+coefs_ols <- tidy(model_ols, conf.int = TRUE)
+
+tau_adj <- coefs_adj %>% filter(term == "prop_leg_women") %>% pull(estimate)
+beta1_adj <- coefs_adj %>% filter(term == "dem_prop") %>% pull(estimate)
+
+tau_unadj <- coefs_unadj %>% filter(term == "prop_leg_women") %>% pull(estimate)
+beta1_unadj <- 0
+
+tau_ols <- coefs_ols %>% filter(term == "prop_leg_women") %>% pull(estimate)
+beta1_ols <- coefs_ols %>% filter(term == "dem_prop") %>% pull(estimate)
+```
+
+```{r}
+new_data <- tibble(
+  prop_leg_women = seq(0, 1, by = 0.01),
+  dem_prop = mean(gems$dem_prop, na.rm = TRUE)
+)
+
+new_data <- new_data %>%
+  mutate(
+    predicted_unadj = tau_unadj * prop_leg_women + beta1_unadj * dem_prop,
+    predicted_adj = tau_adj * prop_leg_women + beta1_adj * dem_prop,
+    predicted_ols = tau_ols * prop_leg_women + beta1_ols * dem_prop
+)
+```
+
+```{r}
+new_data_long <- new_data %>%
+  pivot_longer(
+    cols = starts_with("predicted_"),
+    names_to = "model",
+    values_to = "predicted"
+  )
+```
+
+```{r}
+new_data_long$model <- factor(new_data_long$model, 
+                              levels = c("predicted_unadj", "predicted_adj", "predicted_ols"))
+
+predict_men <- ggplot(new_data_long, aes(x = prop_leg_women, y = predicted, color = model)) +
+  geom_line() +
+  annotate("rect", xmin = 0, xmax = 1, ymin = -.1, ymax = .31, 
+           fill = "grey", alpha = 0.2) +
+  scale_color_manual(values = c(
+    "predicted_unadj" = "#a59eef", 
+    "predicted_adj" = "#4d3df1", 
+    "predicted_ols" = "grey30"
+  ),
+  labels = c(
+    "predicted_unadj" = "Unadjusted", 
+    "predicted_adj" = "Adjusted", 
+    "predicted_ols" = "OLS"
+  )) +
+  labs(
+    x = "Proportion of Women in Legislature",
+    y = "Probability of Policy Being Enacted",
+    subtitle = "Fig. 3.2",
+    title = "Estimated Effect of Women’s Representation on Men-Friendly Policy",
+    caption  = "NOTE: Displays aggregated variable treatment effects only",
+    color = "Model Type"
+  ) +
+  theme_cowplot() +
+  theme(legend.position = c(0.76, 0.15),
+        legend.background = element_rect(fill = alpha("white", 0.6), color = NA),
+        legend.title = element_blank(), 
+        plot.title.position = "plot",
+        plot.caption = element_text(hjust = 0, face= "italic"),
+        plot.caption.position =  "plot",
+        plot.title = element_text(hjust = .5),        
+        plot.subtitle = element_text(face = "bold",
+                                      size = 15)) 
+
+ggsave("predict_men.png", predict_men, width = 8, height = 5)
+```
+
+## Plotting unadj., adj., and ols regressions for aggregated trans-friendly policy
+
+```{r}
+model_adj <- models_trans_part[["pos_trans"]]
+model_unadj <- models_trans[["pos_trans"]]
+model_ols <- models_trans_lm[["pos_trans"]]
+
+coefs_adj <- tidy(model_adj, conf.int = TRUE)
+coefs_unadj <- tidy(model_unadj, conf.int = TRUE)
+coefs_ols <- tidy(model_ols, conf.int = TRUE)
+
+tau_adj <- coefs_adj %>% filter(term == "prop_leg_women") %>% pull(estimate)
+beta1_adj <- coefs_adj %>% filter(term == "dem_prop") %>% pull(estimate)
+
+tau_unadj <- coefs_unadj %>% filter(term == "prop_leg_women") %>% pull(estimate)
+beta1_unadj <- 0
+
+tau_ols <- coefs_ols %>% filter(term == "prop_leg_women") %>% pull(estimate)
+beta1_ols <- coefs_ols %>% filter(term == "dem_prop") %>% pull(estimate)
+```
+
+```{r}
+new_data <- tibble(
+  prop_leg_women = seq(0, 1, by = 0.01),
+  dem_prop = mean(gems$dem_prop, na.rm = TRUE)
+)
+
+new_data <- new_data %>%
+  mutate(
+    predicted_unadj = tau_unadj * prop_leg_women + beta1_unadj * dem_prop,
+    predicted_adj = tau_adj * prop_leg_women + beta1_adj * dem_prop,
+    predicted_ols = tau_ols * prop_leg_women + beta1_ols * dem_prop
+)
+```
+
+```{r}
+new_data_long <- new_data %>%
+  pivot_longer(
+    cols = starts_with("predicted_"),
+    names_to = "model",
+    values_to = "predicted"
+  )
+```
+
+```{r}
+new_data_long$model <- factor(new_data_long$model, 
+                              levels = c("predicted_unadj", "predicted_adj", "predicted_ols"))
+
+predict_trans <-ggplot(new_data_long, aes(x = prop_leg_women, y = predicted, color = model)) +
+  geom_line() +
+  annotate("rect", xmin = 0, xmax = 1, ymin = -.05, ymax = .5, 
+           fill = "grey", alpha = 0.2) +
+  scale_color_manual(values = c(
+    "predicted_unadj" = "#b88ec9", 
+    "predicted_adj" = "#A442ca", 
+    "predicted_ols" = "grey30"
+  ),
+  labels = c(
+    "predicted_unadj" = "Unadjusted", 
+    "predicted_adj" = "Adjusted", 
+    "predicted_ols" = "OLS"
+  )) +
+  labs(
+    x = "Proportion of Women in Legislature",
+    y = "Probability of Policy Being Enacted",
+    subtitle = "Fig. 4.2",
+    title = "Estimated Effect of Women’s Representation on Trans-Friendly Policy",
+    caption = "NOTE: Displays aggregated variable treatment effects only",
+    color = "Model Type"
+  ) +
+  theme_cowplot() +
+  theme(legend.position = c(0.76, 0.15),
+        legend.background = element_rect(fill = alpha("white", 0.6), color = NA),
+        legend.title = element_blank(), 
+        plot.title.position = "plot",
+        plot.caption = element_text(hjust = 0, face= "italic"),
+        plot.caption.position =  "plot",
+        plot.title = element_text(hjust = .5),        
+        plot.subtitle = element_text(face = "bold",
+                                      size = 15)) 
+
+ggsave("predict_trans.png", predict_trans, width = 8, height = 5)
+```
+
+## MidSure Figures (ignore)
+
+```{r}
+p4 <- ggplot(data = df_women, aes(x = estimate, y = dependent_variable, color = model_type)) +
+  geom_point(position = position_dodge(width = 0.5), size = 1.5) +
+  geom_errorbar(aes(xmin = conf.low, xmax = conf.high),
+                position = position_dodge(width = 0.5), width = 0.2) +
+  annotate("rect", xmin = -.25, xmax = 1.4, ymin = .75, ymax = 9.25, 
+           fill = "grey", alpha = 0.2) +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "black") + 
+  labs(x = expression(tau ~ "(" * "Average Treatment Effect" * ")"),
+       y = "Women-Friendly Policies") +
+       #title = "Fig. 2.1") +
+  theme_cowplot() +
+  theme(axis.text.y = ggtext::element_markdown()) +
+  scale_color_manual(values = c(
+  "Unadjusted" = "#ef97b7",  
+  "Adjusted" = "#e13b77", 
+  "OLS" = "grey30")) +
+  theme(
+    legend.position = c(0.7, 0.13),
+    legend.background = element_rect(fill = alpha("white", 0.6), color = NA),
+    legend.title = element_blank()
+  ) + 
+  guides(color = guide_legend(
+    override.order = TRUE,
+    reverse = TRUE  # flips the legend order
+  )) +
+   theme(plot.title.position = "plot") #NEW parameter. Apply for subtitle to
+
+p4
+```
+
+```{r}
+p5 <- ggplot(data = df_men, aes(x = estimate, y = dependent_variable, color = model_type)) +
+  geom_point(position = position_dodge(width = 0.5), size = 1.5) +
+  geom_errorbar(aes(xmin = conf.low, xmax = conf.high),
+                position = position_dodge(width = 0.5), width = 0.2) +
+  annotate("rect", xmin = -.325, xmax = .65, ymin = .55 , ymax = 4.5, 
+           fill = "gray", alpha = 0.2) +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "black") + 
+  labs(x = expression(tau ~ "(" * "Average Treatment Effect" * ")"),
+       y = "Men-Friendly Policies") + 
+       #title = "Fig. 3.1") +
+  theme_cowplot() +
+  theme(axis.text.y = ggtext::element_markdown()) +
+  scale_color_manual(values = c(
+  "Unadjusted" = "#a59eef",  
+  "Adjusted"   = "#4d3df1",
+  "OLS" = "grey30")) +
+  theme(
+    legend.position = c(0.7, 0.14), 
+    legend.background = element_rect(fill = alpha("white", 0.6), color = NA),
+    legend.title = element_blank()) +
+    #plot.title.position = "plot") +
+  guides(color = guide_legend(
+    override.order = TRUE,
+    reverse = TRUE  
+  ))
+
+p5
+```
+
+```{r}
+p6 <- ggplot(data = df_trans, aes(x = estimate, y = dependent_variable, color = model_type)) +
+  geom_point(position = position_dodge(width = 0.5), size = 1.5) +
+  geom_errorbar(aes(xmin = conf.low, xmax = conf.high),
+                position = position_dodge(width = 0.5), width = 0.2) +
+  annotate("rect", xmin = -.05, xmax = .75, ymin = .55, ymax = 3.5, 
+           fill = "gray", alpha = 0.2) +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "black") + 
+  labs(x = expression(tau ~ "(" * "Average Treatment Effect" * ")"),
+       y = "Trans-Friendly Policies") + 
+      # title = "Fig. 4.1") +
+  theme_cowplot() +
+  theme(axis.text.y = ggtext::element_markdown()) +
+  scale_color_manual(values = c(
+  "Unadjusted" = "#b88ec9",  
+  "Adjusted"   = "#A442ca", 
+  "OLS" = "grey30")) +
+  theme(
+    legend.position = c(0.69, 0.14),  
+    legend.background = element_rect(fill = alpha("white", 0.6), color = NA),
+    legend.title = element_blank()) + 
+   # plot.title.position = "plot") +
+  guides(color = guide_legend(
+    override.order = TRUE,
+    reverse = TRUE  
+  ))
+
+p6
+```
+
+```{r}
+results_plot2 <- (p4 / p5 / p6) +
+  plot_annotation(
+  title = "Results", 
+  tag_levels = '1', 
+  tag_prefix = 'Fig. ', 
+  tag_sep = '.', 
+  tag_suffix = ':') &
+  theme(plot.tag = element_text(size = 10))  
+
+ggsave("results_plot_MID.png", results_plot2, width = 7, height = 10)
+```
+
+## MidSure Tables (ignore)
+
+```{r}
+save_as_image(flextable(tidy_models_women), path = "tidy_models_women.png")
+save_as_image(flextable(tidy_models_men), path = "tidy_models_men.png")
+save_as_image(flextable(tidy_models_trans), path = "tidy_models_trans.png")
+save_as_image(flextable(tidy_models_women_part), path = "tidy_models_women_part.png")
+save_as_image(flextable(tidy_models_men_part), path = "tidy_models_men_part.png")
+save_as_image(flextable(tidy_models_trans_part), path = "tidy_models_trans_part.png")
+save_as_image(flextable(tidy_models_neg), path = "tidy_models_neg.png")
+save_as_image(flextable(tidy_models_women_lm), path = "tidy_models_women_lm.png")
+save_as_image(flextable(tidy_models_men_lm), path = "tidy_models_men_lm.png")
+save_as_image(flextable(tidy_models_trans_lm), path = "tidy_models_trans_lm.png")
+```
+
+
