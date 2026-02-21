@@ -1,0 +1,86 @@
+---
+title: "Introducing a State-Level Dataset on Gender-Specific Healthcare: Do Women Legislators Expand Post-ACA Coverage?"
+author: "Emma Huizenga"
+#date: "Working Paper — February 2026"
+format:
+  pdf:
+    documentclass: article
+    number-sections: true
+    toc: false
+    geometry: margin=1in
+    fontsize: 11pt
+    include-in-header:
+      text: |
+        \usepackage{titlesec}
+        \usepackage{graphicx}
+        \usepackage{setspace}  
+        \usepackage{wrapfig}
+        \usepackage{titling}
+        \pretitle{\begin{center}\large\bfseries}
+        \titleformat{\section}{\normalsize\bfseries}{\thesection}{1em}{}
+        \titleformat{\subsection}{\normalsize\bfseries}{\thesubsection}{1em}{}
+---
+\thispagestyle{empty}
+
+\begin{abstract}
+\doublespacing
+The Affordable Care Act (ACA), signed into law in 2010 and fully implemented in 2014, requires both public and private insurers to cover a minimum of ten essential health benefits for their policyholders. While these requirements cover an extensive range of care, some gender-specific health benefits are exempt from obligatory coverage, leaving the issue of mandated coverage to the states. Given that women’s and transgender healthcare has been historically overlooked and highly politicized, it is crucial to examine whether the representation of such marginalized identities in state legislatures influences the adoption of mandatory insurance coverage laws for gender-specific healthcare. Studying the effects of representation can help foster a more inclusive and fair policy system by promoting accountability and equity to address the systemic neglect of these issues. A novel state-level dataset was constructed containing information on insurance mandates for contraceptives, abortion, fertility treatments, vasectomies, erectile dysfunction treatments, prostate cancer screenings, gender-affirming surgery, and transgender hormone therapy, along with data on the gender composition of state legislatures. This dataset was then analyzed to examine the relationship between legislative gender composition and the likelihood of adopting these healthcare coverage mandates.
+\end{abstract}
+
+\vfill
+
+\begin{center}
+\textit{Developed for the Institute of Public Policy and Social Research}
+
+\textit{Advised by Matt Grossmann and Andrew Halterman}
+
+2/20/26
+
+\textcolor{blue}{C}%
+\textcolor{red}{o}%
+\textcolor{purple}{l}%
+\textcolor{green}{o}%
+\textcolor{blue}{r}\hspace{0.3em}%
+\textcolor{red}{V}%
+\textcolor{purple}{e}%
+\textcolor{green}{r}%
+\textcolor{blue}{s}%
+\textcolor{red}{i}%
+\textcolor{purple}{o}%
+\textcolor{green}{n}
+
+\includegraphics[width=0.5\textwidth]{MSU.png}
+\end{center}
+
+\newpage
+\setcounter{page}{1}
+
+# Introduction
+\doublespacing
+\qquad In 2010, the Affordable Care Act (ACA) was successfully signed into law and fully implemented in 2014 by President Barack Obama to reform the American healthcare system. Today, it is debated as the most significant and extensive federal health policy since Medicare (Manchikanti et al, 2017). Substantially, the ACA prohibited insurance companies from implementing annual limits and discriminating against individuals with pre-existing conditions (Assistant Secretary for Public Affairs, 2022a; Assistant Secretary for Public Affairs, 2022b), mandated that insurance providers must provide a public reason if they intend on raising premiums by 10% or more (U.S. Centers for Medicare & Medicaid Services, 2024), and required that public and private insurers cover a minimum of ten essential health benefits for all enrollees (HealthCare.gov, 2025b). 
+\vspace{-1.5ex}
+
+\qquad It is important to note that there are a few exceptions to the ACA’s mandated essential benefits. One such inconsistency applies to grandfathered health plans, which are individual policies sold to enrollees on or before March 23, 2010 (HealthCare.gov, 2025a), which are not required to comply with the ACA’s mandates. Another unique instance involves religious and moral exceptions for faith-based organizations and qualifying non-profits, as these groups are able to request exemption from providing their employees insurance coverage, such as for contraceptive services (the Internal Revenue Service, the Employee Benefits Security Administration, and the Health and Human Services Department, 2018). These examples begin to expose that while the ACA did aim to address a multitude of the public’s health insurance grievances and coverage gaps, there are still measurable missing nodes within the policy.
+\vspace{-1.5ex}
+
+\qquad This study primarily focuses on the gaps in coverage within the ACA’s ten essential benefits policy. While these requirements cover an extensive range of care, some gender-specific health benefits are exempted from obligatory coverage. This leaves the responsibility of mandating health insurance coverage for these excluded items in the ACA to the states (HealthCare.gov, 2025b), in which the politics of coverage are particularly imperative for women (Nicholas, 2000) and transgender individuals (Slagstad, 2021) given that healthcare for these groups have been historically overlooked and highly politicized. These factors raise the question of whether the representation of women officeholders in state legislatures translates to the adoption of insurance coverage policies not only for women's and trans-specific healthcare mandates, but men’s as well. Although men’s healthcare is less politicized, research shows that preventive and reproductive services for men, such as vasectomies and prostate cancer screenings, are inconsistently covered and often underutilized due to structural and policy-level gaps (Moyer, 2012; Sandman, Simantov, & An, 2000). By studying the effects of representation, it can help foster a more inclusive and fair policy system by promoting representative accountability and healthcare equity. 
+
+# Literature Review
+
+# Hypotheses
+
+# Research Design
+
+## Novel Dataset
+
+## TWFE Models
+
+# Findings
+
+## Outcomes for Women
+
+## Outcomes for Men
+
+## Outcomes for Transgender
+
+# Conclusion
