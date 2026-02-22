@@ -1,4 +1,4 @@
-# Gender Representation and Policy Dataset
+## README
 
 This repository contains original datasets and accompanying analysis related to gender composition in U.S. state legislatures and gender-specific insurance policies from 2010–2024. The datasets include:
 
@@ -12,5 +12,3 @@ The repository also includes:
 - **Figures and regression outputs** used in the analysis  
 - **Codebook** explaining all variables  
 - **Rmd files** used for data cleaning, analysis, and visualization
-
-I conducted a **two-way fixed effects analysis** to estimate the effect of legislative gender composition on policy adoption.
