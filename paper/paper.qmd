@@ -1,7 +1,8 @@
 ---
 title: "Introducing a State-Level Dataset on Gender-Specific Healthcare: Do Women Legislators Expand Post-ACA Coverage?"
 author: "Emma Huizenga"
-#date: "Working Paper — February 2026"
+date: "2-23-2026"
+date-format: "MMM D, YYYY"
 format:
   pdf:
     documentclass: article
@@ -30,12 +31,6 @@ The Affordable Care Act (ACA), signed into law in 2010 and fully implemented in 
 \vfill
 
 \begin{center}
-\textit{Developed for the Institute of Public Policy and Social Research}
-
-\textit{Advised by Matt Grossmann and Andrew Halterman}
-
-2/20/26
-
 \textcolor{blue}{C}%
 \textcolor{red}{o}%
 \textcolor{purple}{l}%
@@ -48,6 +43,12 @@ The Affordable Care Act (ACA), signed into law in 2010 and fully implemented in 
 \textcolor{red}{i}%
 \textcolor{purple}{o}%
 \textcolor{green}{n}
+
+Developed for the \textit{Institute of Public Policy and Social Research}
+
+Supplemental Material, Code, and Print Version can be found at:
+
+\href{https://github.com/emmadotrmdfile/beyond-the-ACA.git}{https://github.com/emmadotrmdfile/beyond-the-ACA.git}
 
 \includegraphics[width=0.5\textwidth]{MSU.png}
 \end{center}
