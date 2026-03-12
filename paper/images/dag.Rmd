@@ -1,0 +1,87 @@
+---
+title: "DAG"
+author: "Huizenga"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r}
+library(dagitty)
+library(ggdag)
+library(ggplot2)
+library(latex2exp)
+```
+
+
+```{r}
+dag <- dagitty("
+dag {
+TD [pos=\"1,0\"]
+Y  [pos=\"2,0\"]
+alpha [pos=\"1.5,1\"]
+delta [pos=\"1,-2\"]
+beta  [pos=\"2,-2\"]
+
+TD -> Y
+alpha -> TD
+alpha -> Y
+delta -> TD
+delta -> Y
+beta -> TD
+beta -> Y
+}
+")
+
+labels <- c(
+  TD    = TeX("$\\tau D_{i,t}$"),
+  Y     = TeX("$Y_{i,t}$"),
+  alpha = TeX("$\\alpha_{i}$"),
+  delta = TeX("$\\delta_{t}$"),
+  beta  = TeX("$\\beta X_{i,t}$")
+)
+```
+
+```{r}
+dag <- ggdag(dag, text = FALSE, node_size = 10) +
+  geom_dag_point(aes(color = name), size = 9) +
+  geom_dag_text(aes(label = labels[name]), color = "white", size = 3) +
+  scale_color_manual(
+  name = "Status",
+  breaks = c(
+    "TD", 
+    "Y",
+    "alpha",
+    "delta",
+    "beta"
+  ),
+  values = c(
+    "TD" = "#D95F02",
+    "Y" = "#1B9E77",
+    "alpha" = "#7570B3",
+    "delta" = "#E7298A", 
+    "beta" = "steelblue"),
+  labels = c(
+    TD    = "Treatment",
+    Y     = "Outcome",
+    alpha = "State confounders",
+    delta = "Time confounders",
+    beta  = "Time-state confounders"
+  )) +
+  theme_dag_blank() +
+  theme(
+    legend.position = "right", 
+    legend.background = element_rect(fill = "grey95", color = "black", linewidth = 0.5),
+    legend.margin = margin(5, 5, 5, 5), 
+    legend.text = element_text(size = 7),  
+    legend.title = element_text(size = 8)) +
+  guides(color = 
+        guide_legend(
+        override.aes = list(label = "", size = 5)))
+
+dag
+```
+
+```{r}
+ggsave(dag, filename = "dag.pdf", height = 2.5, width = 5)
+```
+

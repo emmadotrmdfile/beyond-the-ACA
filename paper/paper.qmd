@@ -41,7 +41,7 @@ Replication materials and dataset available at:
 
 \href{https://github.com/emmadotrmdfile/beyond-the-ACA.git}{https://github.com/emmadotrmdfile/beyond-the-ACA}
 
-\includegraphics[width=0.5\textwidth]{MSU.png}
+\includegraphics[width=0.5\textwidth]{../paper/images/MSU.png}
 \end{center}
 \newpage
 \setcounter{page}{1}
@@ -141,11 +141,16 @@ For instance, the Dobbs v. Jackson Supreme Court ruling in 2022 represents a shi
 As such, it functions as a time-varying confounder. Similarly, the subsequent state-level policy fragmentation introduces state-specific variation in the policy environment, potentially confounding the relationship between women’s representation and policy enactment across states (Browne, 2024).
 \vspace{-1.5ex}
 
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=.9\textwidth]{../paper/images/dag.pdf}
+  \label{fig:dag}
+  \caption{Directed Acyclic Graph}
+\end{figure}
+
 \qquad To address these concerns, we estimate two-way fixed effects models that include state and year fixed effects.
 State fixed effects absorb time-invariant characteristics of states, such as long-established political culture or ideology, while year fixed effects account for common national shocks, including federal judicial rulings and national movements. Conditional on these fixed effects and observed confounders, there are no unobserved time-varying state-specific factors that simultaneously affect women’s legislative representation and policy enactment.
 \vspace{-1.5ex}
-
-\qquad For a visual representation of this hypothesized causal relationship, a directed acyclic graph is displayed in **Appendix B, Figure 1.**
 
 ## Estimation Strategy
 
@@ -253,7 +258,7 @@ This disparity in effect size may be explained by the growing urgency to protect
 
 # Conclusion
 
-\qquad This study offers an extensive analysis of the effects of women's representation in state legislatures on the passage of women’s, men’s, and transgender healthcare insurance mandates through an original dataset. The subsequent analyses in this paper offer answers to the following question: Does an increase in women’s representation in state legislatures lead to more policies mandating insurance coverage for gender-specific healthcare? Overall, the empirical analyses show that the presence of women in state legislatures has a positive impact on all gender-specific insurance mandates, but most notably for women-friendly policies. This impact did not change significantly after adjusting for partisanship, providing support that women legislators do contribute uniquely to the passage of policies pertaining to their constituents. 
+\qquad This study offers an extensive analysis of the effects of women's representation in state legislatures on the passage of women’s, men’s, and transgender healthcare insurance mandates through an original dataset. The subsequent analyses in this paper offer answers to the following question: *Does an increase in women’s representation in state legislatures lead to more policies mandating insurance coverage for gender-specific healthcare?* Overall, the empirical analyses show that the presence of women in state legislatures has a positive impact on all gender-specific insurance mandates, but most notably for women-friendly policies. This impact did not change significantly after adjusting for partisanship, providing support that women legislators do contribute uniquely to the passage of policies pertaining to their constituents. 
 \vspace{-1.5ex}
 
 \qquad Despite this conclusion, further research is required to determine why women’s representation correlates with these policy outcomes. Possible avenues could explore whether women legislators are more likely to introduce such bills and feel more empowered to do so when working alongside other women, or if they keep their colleagues in close proximity to their policy agendas, or whether states that elect more women tend to have distinct policy priorities. The methodology of this study assumes a degree of similarity across states, despite the reality that they are unique to each other and contain different historical dispositions regarding healthcare coverage. Even with these limitations, this study seeks to contribute to understanding how legislative representation shapes the development of equitable healthcare policy. 
