@@ -29,9 +29,12 @@ format:
         \usepackage{titling}
         \usepackage{subcaption}
         \usepackage{booktabs}
+        \usepackage{float}
+        \usepackage{afterpage}
         \pretitle{\begin{center}\large\bfseries}
         \titleformat{\section}{\normalsize\bfseries}{\thesection}{1em}{}
         \titleformat{\subsection}{\normalsize\bfseries}{\thesubsection}{1em}{}
+        \raggedbottom   
 
 editor:
   markdown:
@@ -95,7 +98,7 @@ Replication materials and dataset available at:
 
 # New Dataset
 
-\qquad The following sections document the construction of the novel state-year dataset used in the analysis. It first describes the classification and coding of gender-specific insurance mandates and then outlines the assembly of legislative gender composition measures.
+\qquad The following sections document the construction of our state-year dataset used in the analysis. We first describe the classification and coding of gender-specific insurance mandates and then outline the assembly of the legislative gender composition data.
 
 ## Policy Data
 
@@ -112,7 +115,7 @@ These inconsistencies between state-level mandates and federal policy leaves mil
 \qquad Transgender policies include coverage for gender-affirming surgery and hormone therapy. Although the ACA prohibits any health facility, program, or activity receiving federal funding from denying insurance coverage or care on the basis of gender identity and expression, constant altercations to the language of Section 1557 has created inconsistencies and gaps in coverage specifically for transgender individuals seeking gender-affirming care (Dawson et al., 2024; Rogers, 2024). In addition, some private employer-sponsored plans, particularly self-insured plans, are exempt if they do not receive federal funds. Plans may also still limit access by defining what counts as “medically necessary” or by requiring extensive prior authorization. Because of this variability, we include gender-affirming surgery and hormone therapy to capture whether states require coverage for such services.
 \vspace{-1.5ex}
 
-\qquad Because no existing dataset catalogues these insurance mandates, legislative text was collected directly from state-level bill archives using LegiScan. We used keyword searches that yielded the raw text of thousands of bills, which we then manually reviewed to identify legislation mandating essential health insurance coverage for the policies of interest. We read each qualifying bill in full to verify statutory language before being coded as a binary indicator, where “1” denotes passage in a given state-year and “0” otherwise. Counts for women-, men-, and transgender-friendly policies and all individual policies can be found in **Appendix A (Tables 1 and 2).**
+\qquad Because no existing dataset catalogues these insurance mandates, legislative text was collected directly from state-level bill archives using LegiScan. We used keyword searches that yielded the raw text of thousands of bills, which we then manually reviewed to identify legislation mandating essential health insurance coverage for the policies of interest. We read each qualifying bill in full to verify statutory language before being coded as a binary indicator, where “1” denotes passage in a given state-year and “0” otherwise. Counts for women-, men-, and transgender-friendly policies and all individual policies can be found in \textbf{Appendix \ref{app:tables}} **(Tables 1 and 2).**
 
 ## Gender Composition Data
 
@@ -180,7 +183,7 @@ where $Y_{i,t}$ is the outcome of interest for state *i* in year *t*. This is a 
 $β_1$ and $β_2$ are the coefficients on observed state- and time-varying confounders: the proportion of Democratic legislators ($X^1_{i,t}$) and a binary indicator for Democratic legislative majority ($X^2_{i,t}$), respectively. $ε_{i,t}$ is the error term. **Model 1.1** represents the unadjusted model, while **Model 1.2** represents the adjusted model. I estimate all models using the `plm` package in R (Croissant & Millo, 2018).[^2]
 \vspace{-1.5ex}
 
-[^2]: A description of my workflow is provided in Appendix C.
+[^2]: A description of my workflow is provided in Appendix \ref{app:R}.
 
 \qquad In the absence of TWFE, we sought to examine the outcomes using a straightforward ordinary least squares (OLS) regression. The motive behind this was to establish a baseline association between the policy outcomes and women’s representation. This model includes the same two confounders discussed in **Model 1.2:**
 
@@ -195,9 +198,10 @@ Therefore, these results are interpreted carefully and future work could build o
 
 # Results
 
-\qquad All figures in this section plot the effects on each policy from the unadjusted model **(Model 1.1)**, adjusted model **(Model 1.2)**, and OLS regressions **(Model 2)**. Aggregated variables are in bold, which represent a composite measure of all policies. This discussion will focus on the TWFE estimates.[^3] Additional figures are provided in **Appendix B.**
+\qquad All figures in this section plot the effects on each policy from the unadjusted model **(Model 1.1)**, adjusted model **(Model 1.2)**, and OLS regressions **(Model 2)**. Aggregated variables are in bold, which represent a composite measure of all policies. This discussion will focus on the TWFE estimates.[^3] Additional figures are provided in \textbf{Appendix \ref{app:figures}}.[^4]
 
 [^3]: OLS results are similar, but with smaller effects. I included them in the main-text figures for comparison.
+[^4]: You can zoom in on these; they are provided at a high resolution. 
 
 ## Outcomes for Women
 
@@ -217,7 +221,7 @@ In addition, there is an aggregated contraceptives variable to encapsulate the f
 \qquad The unadjusted and adjusted ATEs were positive and statistically significant for both aggregated variables–women-friendly policies and contraceptives policies–as well as for abortion and fertility treatment coverage mandates. The remaining individual contraceptive policy variables were positively associated with women’s representation but did not reach statistical significance, with the exception of the over-the-counter contraception with prescription policy, which showed an insignificant negative effect. This may be due to women legislators' attitudes towards acquiring contraceptives, making them more likely to advocate for a more accessible route to them, specifically without the need for a prescription. After controlling for Democratic representation, the ATEs remained largely stable, shifting by no more than one percentage point. The average treatment effects from the models indicate that increased women’s representation in state legislatures is linked to a higher likelihood of enacting women’s health-related policies.
 \vspace{-1.5ex}
 
-\qquad For the aggregated women's-friendly policy variable, the estimated treatment effects were around 0.88 for both models, indicating that a 10 percentage point increase in women’s representation would make these policies 8.8 percent more likely to be enacted. Extending this logic, if state legislatures were entirely women-led, the likelihood of such policies being passed increases to 88 percent **(Appendix B, Figure 2.2).** For the aggregated contraceptives variable, the estimated treatment effect was 0.43 in both the unadjusted and adjusted models, indicating that contraceptive-related policies are 4.3 percent more likely to be enacted if there is a 10 percentage point increase in women’s representation. Similarly, abortion coverage mandates yielded treatment effects of 0.29 (unadjusted) and 0.28 (adjusted), while fertility treatment mandates showed effects of 0.32 (unadjusted) and 0.31 (adjusted).
+\qquad For the aggregated women's-friendly policy variable, the estimated treatment effects were around 0.88 for both models, indicating that a 10 percentage point increase in women’s representation would make these policies 8.8 percent more likely to be enacted. Extending this logic, if state legislatures were entirely women-led, the likelihood of such policies being passed increases to 88 percent \textbf{(Appendix \ref{app:figures},} **Figure 2.2).** For the aggregated contraceptives variable, the estimated treatment effect was 0.43 in both the unadjusted and adjusted models, indicating that contraceptive-related policies are 4.3 percent more likely to be enacted if there is a 10 percentage point increase in women’s representation. Similarly, abortion coverage mandates yielded treatment effects of 0.29 (unadjusted) and 0.28 (adjusted), while fertility treatment mandates showed effects of 0.32 (unadjusted) and 0.31 (adjusted).
 
 ## Outcomes for Men
 
@@ -233,7 +237,7 @@ In addition, there is an aggregated contraceptives variable to encapsulate the f
 \qquad For the men’s health-related policies, the average treatment effects from both TWFE models indicate that as women’s representation increases, men’s health-related policies also become slightly more likely to be enacted. The adjusted treatment effects changed minimally, with the largest shifts observed in the aggregated men’s health variable and the prostate cancer screening coverage variable, though even these effects changed by only a few thousandths.
 \vspace{-1.5ex}
 
-\qquad The aggregated men’s health-friendly variable showed a statistically significant and positive treatment effect of 0.29 (unadjusted) and 0.33 (adjusted). This indicates that a 10 percentage point increase in women’s representation corresponds to a 2.9 to 3.3 percent higher likelihood of these policies passing. In a legislature entirely composed of women, the likelihood of passage is 29 to 33 percent **(Appendix B, Figure 3.2).** 
+\qquad The aggregated men’s health-friendly variable showed a statistically significant and positive treatment effect of 0.29 (unadjusted) and 0.33 (adjusted). This indicates that a 10 percentage point increase in women’s representation corresponds to a 2.9 to 3.3 percent higher likelihood of these policies passing. In a legislature entirely composed of women, the likelihood of passage is 29 to 33 percent \textbf{(Appendix \ref{app:figures},} **Figure 3.2).** 
 \vspace{-1.5ex}
 
 \qquad The prostate screening coverage variable also demonstrated a statistically significant and positive treatment effect–0.28 (unadjusted) and 0.32 (adjusted)–suggesting a 28 to 32 percent higher likelihood of adoption with a legislature full of women. The vasectomy coverage policy was also statistically insignificant but yielded a positive direction of effect.
@@ -252,7 +256,7 @@ In addition, there is an aggregated contraceptives variable to encapsulate the f
 \qquad For transgender policies, the adjusted and unadjusted treatment effects were positive and statistically significant for the transgender-aggregated variable and gender affirming care policy. On the other hand, the treatment effect for hormone therapy was positive but statistically insignificant. The adjusted model’s treatment effects remained relatively unchanged, both behaving in a similar manner as described above.
 \vspace{-1.5ex}
 
-\qquad The treatment effect for the transgender-friendly aggregated variable was .46 (unadjusted) and .48 (adjusted), indicating that a 10 percentage point increase in women’s representation would make transgender-friendly policies 4.6 to 4.8 percent more likely to be enacted. Therefore, if state legislatures were entirely composed of women, the TWFE models suggest that these policies would be 46 to 48 percent more likely to pass **(Appendix B, Figure 4.2)**.
+\qquad The treatment effect for the transgender-friendly aggregated variable was .46 (unadjusted) and .48 (adjusted), indicating that a 10 percentage point increase in women’s representation would make transgender-friendly policies 4.6 to 4.8 percent more likely to be enacted. Therefore, if state legislatures were entirely composed of women, the TWFE models suggest that these policies would be 46 to 48 percent more likely to pass \textbf{(Appendix \ref{app:figures},} **Figure 4.2).**
 
 # Discussion
 
@@ -446,13 +450,14 @@ Policies. Working paper.
 
 \newpage
 
-\phantomsection
-\begin{center}
-\textbf{Appendix A}
-\end{center}
-\addcontentsline{toc}{section}{Appendix A}
+\titleformat{\section}{\centering\normalsize\bfseries}{Appendix \thesection}{1em}{}
 
-\begin{table}[!htbp]
+\appendix
+
+\section{Tables}
+\label{app:tables}
+
+\begin{table}[H]
 \centering
 \captionsetup{labelfont = bf}
 \caption{Aggregated Policy Counts}
@@ -468,7 +473,7 @@ Total & 106 & 100 \\
 \end{tabular}
 \end{table}
 
-\begin{table}[!htbp]
+\begin{table}[H]
 \centering
 \captionsetup{labelfont = bf}
 \caption{Individual Policy Counts}
@@ -493,82 +498,45 @@ Hormone Therapy & 3 & Trans-Friendly \\
 \end{tabular}
 \end{table}
 
-\newpage
+\section{Figures}
+\label{app:figures}
 
-\phantomsection
-\begin{center}
-\textbf{Appendix B}
-\end{center}
-\addcontentsline{toc}{section}{Appendix B}
-
-\begin{figure}[!htbp]
+\begin{figure}[H]
   \centering
   \captionsetup{labelfont=bf}
 
-  \begin{subfigure}{0.75\textwidth}
+  \begin{subfigure}{0.73\textwidth}
     \centering
     \renewcommand\thesubfigure{Figure 2.2}
     \caption{Estimated Effect of Women’s Representation on Women-Friendly Policy}
-    \includegraphics[height=0.5\textwidth]{../working files/figures/predict_women_paper.pdf}
+    \includegraphics[height=0.48\textwidth]{../working files/figures/predict_women_paper.pdf}
     \label{fig:B1}
   \end{subfigure}
 
-  \vspace{.3em}
+  \vspace{.1em}
 
-  \begin{subfigure}{0.75\textwidth}
+  \begin{subfigure}{0.73\textwidth}
     \centering
     \renewcommand\thesubfigure{Figure 3.2}
     \caption{Estimated Effect of Women’s Representation on Men-Friendly Policy}
-    \includegraphics[height=0.5\textwidth]{../working files/figures/predict_men_paper.pdf}
+    \includegraphics[height=0.48\textwidth]{../working files/figures/predict_men_paper.pdf}
     \label{fig:B2}
   \end{subfigure}
   
-  \vspace{.3em}
+  \vspace{.1em}
   
-  \begin{subfigure}{0.75\textwidth}
+  \begin{subfigure}{0.73\textwidth}
     \centering
     \renewcommand\thesubfigure{Figure 4.2}
     \caption{Estimated Effect of Women’s Representation on Trans-Friendly Policy}
-    \includegraphics[height=0.5\textwidth]{../working files/figures/predict_trans_paper.pdf}
+    \includegraphics[height=0.48\textwidth]{../working files/figures/predict_trans_paper.pdf}
     \label{fig:B3}
   \end{subfigure}
 
 \end{figure}
 
-\begin{figure}[h]
-  \centering
-  \renewcommand{\thefigure}{2.2}
-  \captionsetup{labelfont=bf}
-  \caption{Estimated Effect of Women’s Representation on Women-Friendly Policy}
-  \includegraphics[width=.8\textwidth]{../working files/figures/predict_women_paper.pdf}
-  \label{fig:womenpredict}
-\end{figure}
-
-\begin{figure}[h]
-  \centering
-  \renewcommand{\thefigure}{3.2}
-  \captionsetup{labelfont=bf}
-  \caption{Estimated Effect of Women’s Representation on Men-Friendly Policy}
-  \includegraphics[width=.8\textwidth]{../working files/figures/predict_men_paper.pdf}
-  \label{fig:menpredict}
-\end{figure}
-
-\begin{figure}[h]
-  \centering
-  \renewcommand{\thefigure}{4.2}
-  \captionsetup{labelfont=bf}
-  \caption{Estimated Effect of Women’s Representation on Trans-Friendly Policy}
-  \includegraphics[width=.8\textwidth]{../working files/figures/predict_trans_paper.pdf}
-  \label{fig:transpredict}
-\end{figure}
-
-\newpage
-
-\phantomsection
-\begin{center}
-\textbf{Appendix C}
-\end{center}
-\addcontentsline{toc}{section}{Appendix C}
+\section{Rstudio}
+\label{app:R}
 
 \qquad Once data collection was finished in Excel, the datasets were saved as comma-separated value (csv) files and imported into RStudio for analysis. All data cleaning, merging, modeling, and visualization were conducted in a RMarkdown file. A total of forty-eight regressions were run, thirty-two of which were TWFE, using the `plm` package (Croissant & Millo, 2018). To efficiently manage the large number of models, separate vectors were created for each gender and their corresponding policies, such as dependent_variables_women, and for loops were utilized to systematically run regressions for every dependent variable in each group. For example, for the set of women-friendly policies, an empty list called models_women was created. Each dependent variable in this category (dependent_variables_women) was looped over, a formula was constructed relating the dependent variable to the main explanatory variable (prop_leg_women), and then a TWFE regression was ran using the plm() function, with state and year set as the panel indices. Once all the models were estimated, the results were tidyed, and confidence intervals were extracted and combined into a single data frame for easier interpretation and visualization. 
 
