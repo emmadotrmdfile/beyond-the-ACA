@@ -28,6 +28,7 @@ format:
         \usepackage{wrapfig}
         \usepackage{titling}
         \usepackage{subcaption}
+        \usepackage{booktabs}
         \pretitle{\begin{center}\large\bfseries}
         \titleformat{\section}{\normalsize\bfseries}{\thesection}{1em}{}
         \titleformat{\subsection}{\normalsize\bfseries}{\thesubsection}{1em}{}
@@ -451,6 +452,47 @@ Policies. Working paper.
 \end{center}
 \addcontentsline{toc}{section}{Appendix A}
 
+\begin{table}[!htbp]
+\centering
+\captionsetup{labelfont = bf}
+\caption{Aggregated Policy Counts}
+\begin{tabular}{lccc}
+\toprule
+Policy Type & Count & Percentage of Total Policies\\
+\midrule
+Women-Friendly Policy & 81 & 76.42 \\
+Men-Friendly Policy & 24 & 22.46 \\
+Trans-Friendly Policy & 16 & 15.09 \\
+Total & 106 & 100 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[!htbp]
+\centering
+\captionsetup{labelfont = bf}
+\caption{Individual Policy Counts}
+\begin{tabular}{lccc}
+\toprule
+Policy & Count & Policy Type\\
+\midrule
+Contraceptives (total) & 58 & Women-Friendly \\
+Prescription Contraceptives & 32 & Women-Friendly \\
+OTC Contraceptives w/ Prescription & 3 & Women-Friendly \\
+OTC Contraceptives w/o Prescription & 8 & Women-Friendly \\
+Extended Supply Contraceptives & 30 & Women-Friendly \\
+No Cost-Sharing Contraceptives & 23 & Women-Friendly \\
+Abortion & 10 & Women-Friendly \\
+Fertility Treatments & 26 & Women-Friendly \\
+Prostate Cancer Screenings & 13 & Men-Friendly \\
+Erectile Dysfunction Treatments & 2 & Men-Friendly \\ 
+Vasectomies & 10 & Men-Friendly \\ 
+Gender-Affirming Care & 14 & Trans-Friendly \\
+Hormone Therapy & 3 & Trans-Friendly \\
+\bottomrule
+\end{tabular}
+\end{table}
+
 \newpage
 
 \phantomsection
@@ -459,30 +501,33 @@ Policies. Working paper.
 \end{center}
 \addcontentsline{toc}{section}{Appendix B}
 
-\begin{figure}[h]
+\begin{figure}[!htbp]
   \centering
   \captionsetup{labelfont=bf}
 
-  \begin{subfigure}[2.2]{0.8\textwidth}
+  \begin{subfigure}{0.75\textwidth}
     \centering
+    \renewcommand\thesubfigure{Figure 2.2}
     \caption{Estimated Effect of Women’s Representation on Women-Friendly Policy}
     \includegraphics[height=0.5\textwidth]{../working files/figures/predict_women_paper.pdf}
     \label{fig:B1}
   \end{subfigure}
 
-  \vspace{1em}
+  \vspace{.3em}
 
-  \begin{subfigure}[3.2]{0.8\textwidth}
+  \begin{subfigure}{0.75\textwidth}
     \centering
+    \renewcommand\thesubfigure{Figure 3.2}
     \caption{Estimated Effect of Women’s Representation on Men-Friendly Policy}
     \includegraphics[height=0.5\textwidth]{../working files/figures/predict_men_paper.pdf}
     \label{fig:B2}
   \end{subfigure}
   
-  \vspace{1em}
+  \vspace{.3em}
   
-  \begin{subfigure}[4.2]{0.8\textwidth}
+  \begin{subfigure}{0.75\textwidth}
     \centering
+    \renewcommand\thesubfigure{Figure 4.2}
     \caption{Estimated Effect of Women’s Representation on Trans-Friendly Policy}
     \includegraphics[height=0.5\textwidth]{../working files/figures/predict_trans_paper.pdf}
     \label{fig:B3}
@@ -499,8 +544,6 @@ Policies. Working paper.
   \label{fig:womenpredict}
 \end{figure}
 
-  \vspace{-8em}
-
 \begin{figure}[h]
   \centering
   \renewcommand{\thefigure}{3.2}
@@ -509,8 +552,6 @@ Policies. Working paper.
   \includegraphics[width=.8\textwidth]{../working files/figures/predict_men_paper.pdf}
   \label{fig:menpredict}
 \end{figure}
-
-  \vspace{-8em}
 
 \begin{figure}[h]
   \centering
