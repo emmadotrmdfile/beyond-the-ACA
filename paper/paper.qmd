@@ -195,9 +195,10 @@ Therefore, these results are interpreted carefully and future work could build o
 
 # Results
 
-\qquad All figures in this section plot the effects on each policy from the unadjusted model **(Model 1.1)**, adjusted model **(Model 1.2)**, and OLS regressions **(Model 2)**. Aggregated variables are in bold, which represent a composite measure of all policies. This discussion will focus on the TWFE estimates.[^3] Additional figures are provided in **Appendix B.**
+\qquad All figures in this section plot the effects on each policy from the unadjusted model **(Model 1.1)**, adjusted model **(Model 1.2)**, and OLS regressions **(Model 2)**. Aggregated variables are in bold, which represent a composite measure of all policies. This discussion will focus on the TWFE estimates.[^3] Additional figures are provided in **Appendix B.**[^4]
 
 [^3]: OLS results are similar, but with smaller effects. I included them in the main-text figures for comparison.
+[^4]: You can zoom in on these; they are provided at a high resolution. 
 
 ## Outcomes for Women
 
@@ -505,7 +506,7 @@ Hormone Therapy & 3 & Trans-Friendly \\
   \centering
   \captionsetup{labelfont=bf}
 
-  \begin{subfigure}{0.75\textwidth}
+  \begin{subfigure}{0.7\textwidth}
     \centering
     \renewcommand\thesubfigure{Figure 2.2}
     \caption{Estimated Effect of Women’s Representation on Women-Friendly Policy}
@@ -515,7 +516,7 @@ Hormone Therapy & 3 & Trans-Friendly \\
 
   \vspace{.3em}
 
-  \begin{subfigure}{0.75\textwidth}
+  \begin{subfigure}{0.7\textwidth}
     \centering
     \renewcommand\thesubfigure{Figure 3.2}
     \caption{Estimated Effect of Women’s Representation on Men-Friendly Policy}
@@ -525,7 +526,7 @@ Hormone Therapy & 3 & Trans-Friendly \\
   
   \vspace{.3em}
   
-  \begin{subfigure}{0.75\textwidth}
+  \begin{subfigure}{0.7\textwidth}
     \centering
     \renewcommand\thesubfigure{Figure 4.2}
     \caption{Estimated Effect of Women’s Representation on Trans-Friendly Policy}
@@ -533,33 +534,6 @@ Hormone Therapy & 3 & Trans-Friendly \\
     \label{fig:B3}
   \end{subfigure}
 
-\end{figure}
-
-\begin{figure}[h]
-  \centering
-  \renewcommand{\thefigure}{2.2}
-  \captionsetup{labelfont=bf}
-  \caption{Estimated Effect of Women’s Representation on Women-Friendly Policy}
-  \includegraphics[width=.8\textwidth]{../working files/figures/predict_women_paper.pdf}
-  \label{fig:womenpredict}
-\end{figure}
-
-\begin{figure}[h]
-  \centering
-  \renewcommand{\thefigure}{3.2}
-  \captionsetup{labelfont=bf}
-  \caption{Estimated Effect of Women’s Representation on Men-Friendly Policy}
-  \includegraphics[width=.8\textwidth]{../working files/figures/predict_men_paper.pdf}
-  \label{fig:menpredict}
-\end{figure}
-
-\begin{figure}[h]
-  \centering
-  \renewcommand{\thefigure}{4.2}
-  \captionsetup{labelfont=bf}
-  \caption{Estimated Effect of Women’s Representation on Trans-Friendly Policy}
-  \includegraphics[width=.8\textwidth]{../working files/figures/predict_trans_paper.pdf}
-  \label{fig:transpredict}
 \end{figure}
 
 \newpage
